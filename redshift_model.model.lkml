@@ -19,7 +19,6 @@ explore: redshift_etl_errors {
 }
 
 explore: redshift_tables {
-  persist_for: "0 seconds"
   view_label: "[Redshift Tables]"
   join: redshift_query_execution {
     sql_on: ${redshift_query_execution.table_join_key}=${redshift_tables.table_join_key};;
@@ -43,7 +42,6 @@ explore: redshift_tables {
 }
 
 explore: redshift_plan_steps {
-  persist_for: "0 seconds"
   join: redshift_tables {
     sql_on: ${redshift_tables.table}=${redshift_plan_steps.table} ;;
     type: left_outer
@@ -99,14 +97,11 @@ explore: redshift_plan_steps {
 }
 
 explore: redshift_queries {
-  persist_for: "0 seconds"
 }
 
 explore: redshift_slices {
-  persist_for: "0 seconds"
 }
 
 explore: redshift_query_execution {
-  persist_for: "0 seconds"
   fields: [ALL_FIELDS*, -redshift_query_execution.emitted_rows_to_table_rows_ratio]
 }
