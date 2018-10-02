@@ -154,7 +154,7 @@ view: redshift_data_loads {
   measure: hours_since_last_load {
     type: number
     value_format_name: id
-    sql: datediff('hour', ${most_recent_load}, getdate()) ;;
+    sql: datediff('hour', ${most_recent_load}, now()) ;;
     html: {% if value < 24 %}
       <div style="color:#B40404; background-color:#22CE7E; font-size:100%; text-align:center">{{ rendered_value }}</div>
       {% elsif value >= 24 and value < 48 %}
@@ -171,7 +171,7 @@ view: redshift_plan_steps {
   #description: "Steps from the query planner for recent queries to Redshift"
   derived_table: {
     # Insert into PDT because redshift won't allow joining certain system tables/views onto others (presumably because they are located only on the leader node)
-    sql_trigger_value: SELECT FLOOR((EXTRACT(epoch from GETDATE()) - 60*60*23)/(60*60*24)) ;; #23h
+    sql_trigger_value: SELECT FLOOR((EXTRACT(epoch from NOW()) - 60*60*23)/(60*60*24)) ;; #23h
     sql:
         SELECT
         query, nodeid, parentid,
@@ -349,8 +349,8 @@ view: redshift_queries {
   # Recent is last 24 hours of queries
   # (we only see queries related to our rs user_id)
   derived_table: {
-    sql_trigger_value: SELECT FLOOR(EXTRACT(MINUTE from GETDATE())) ;;
-    # sql_trigger_value: SELECT FLOOR((EXTRACT(epoch from GETDATE()) - 60*60*22)/(60*60*24)) ;; #22h
+    sql_trigger_value: SELECT FLOOR(EXTRACT(MINUTE from NOW())) ;;
+    # sql_trigger_value: SELECT FLOOR((EXTRACT(epoch from NOW()) - 60*60*22)/(60*60*24)) ;; #22h
     sql: SELECT
         wlm.query,
         q.substring::varchar,
@@ -365,8 +365,8 @@ view: redshift_queries {
       LEFT JOIN STV_WLM_SERVICE_CLASS_CONFIG sc ON sc.service_class=wlm.service_class -- Remove this line if access was not granted
       LEFT JOIN SVL_QLOG q on q.query=wlm.query
       LEFT JOIN STL_QUERY qlong on qlong.query=q.query
-      WHERE wlm.service_class_start_time >= dateadd(day,-7,GETDATE())
-      AND wlm.service_class_start_time <= GETDATE()
+      WHERE wlm.service_class_start_time >= dateadd(day,-7,NOW())
+      AND wlm.service_class_start_time <= NOW()
       --WHERE wlm.query>=(SELECT MAX(query)-5000 FROM STL_WLM_QUERY)
     ;;
     #STL_QUERY vs SVL_QLOG. STL_QUERY has more characters of query text (4000), but is only retained for "2 to 5 days"
@@ -501,7 +501,7 @@ view: redshift_slices {
   # Use the STV_SLICES table to view the current mapping of a slice to a node.
   # This table is visible to all users. Superusers can see all rows; regular users can see only their own data.
   derived_table: {
-    #sql_trigger_value: SELECT FLOOR((EXTRACT(epoch from GETDATE()) - 60*60*22)/(60*60*24)) ;; #22h
+    #sql_trigger_value: SELECT FLOOR((EXTRACT(epoch from NOW()) - 60*60*22)/(60*60*24)) ;; #22h
     persist_for: "12 hours"
     sql: SELECT slice,node FROM STV_SLICES;;
     distribution_style: "all"
@@ -722,7 +722,7 @@ view: redshift_query_execution {
   #description: "Steps from the query planner for recent queries to Redshift"
   derived_table: {
     # Insert into PDT because redshift won't allow joining certain system tables/views onto others (presumably because they are located only on the leader node)
-    sql_trigger_value: SELECT FLOOR((EXTRACT(epoch from GETDATE()) - 60*60*23)/(60*60*24)) ;; #23h
+    sql_trigger_value: SELECT FLOOR((EXTRACT(epoch from NOW()) - 60*60*23)/(60*60*24)) ;; #23h
     sql:
         SELECT
           query ||'.'|| seg || '.' || step as id,
